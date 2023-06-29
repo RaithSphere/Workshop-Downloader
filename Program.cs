@@ -66,7 +66,7 @@ class Program
 
 
         Console.ForegroundColor = ConsoleColor.White;
-        Console.Write("Enter the ModID or URL:\n");
+        Console.Write("Enter the ModID or URL:\n\n");
         string modInput = Console.ReadLine();
 
         string modId;
