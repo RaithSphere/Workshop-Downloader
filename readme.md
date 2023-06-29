@@ -26,6 +26,4 @@ The Stellaris Steam Downloader is a tool that allows you to download mods for th
 
 ## Notes
 
-- The paths in the code (`steamCmdPath`, `outputFolderPath`, etc.) are set according to my system. You may need to modify them to match your own directory structure.
-
 - This program relies on the availability and functionality of SteamCMD and the Steam Workshop webpages.

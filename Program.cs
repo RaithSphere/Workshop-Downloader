@@ -59,8 +59,7 @@ class Program
         string modName = GetModName(modId);
         Console.WriteLine($"Downloading mod: {modName}");
 
-
-        string outputFolderPath = $"E:\\Raith\\SteamDownloader\\steam\\steamapps\\workshop\\content\\{appId}\\{modId}";
+        string outputFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steam", "steamapps", "workshop", "content", appId, modId);
 
         // Start the SteamCMD process with arguments
         ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -84,7 +83,8 @@ class Program
         Console.WriteLine(output);
 
         // Create a zip file of the downloaded contents
-        string zipFilePath = $"E:\\Raith\\SteamDownloader\\steam\\steamapps\\workshop\\content\\{appId}\\{modId}.zip";
+        string zipFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steam", "steamapps", "workshop", "content", appId, $"{modId}.zip");
+
         // Check if the zip file already exists and delete it if it does
         if (File.Exists(zipFilePath))
         {
@@ -102,7 +102,7 @@ class Program
 
         Console.WriteLine("Output folder deleted successfully.");
 
-        // Modify the modFilePath to save one folder lower
+        // Create the Stellaris Mod file
         string modFileName = $"{modId}.mod";
         string modFilePath = Path.Combine(Path.GetDirectoryName(outputFolderPath), modFileName);
         string modFolderPath3 = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Paradox Interactive", "Stellaris", "mod");
@@ -149,10 +149,6 @@ class Program
         File.Move(modZipFilePath, modZipFileDestination);
 
         Console.WriteLine("Zip file moved to the mod folder.");
-
-        // Exit the program
-        Environment.Exit(0);
-
 
         Console.WriteLine("Press the Spacebar to continue...");
         while (Console.ReadKey(true).Key != ConsoleKey.Spacebar)
