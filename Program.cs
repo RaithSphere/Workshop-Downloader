@@ -9,7 +9,39 @@ class Program
 {
     static void Main()
     {
-        string steamCmdPath = "C:\\steam\\steamcmd.exe"; // Path to your SteamCMD executable
+        string steamCmdPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamcmd.exe");
+
+        if (!File.Exists(steamCmdPath))
+        {
+            Console.WriteLine("SteamCMD not found. Downloading...");
+
+            string steamCmdUrl = "https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip";
+            string steamCmdZipPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamcmd.zip");
+
+            using (HttpClient client = new HttpClient())
+            {
+                var response = client.GetAsync(steamCmdUrl).Result;
+                response.EnsureSuccessStatusCode();
+
+                using (var contentStream = response.Content.ReadAsStreamAsync().Result)
+                {
+                    using (FileStream fileStream = File.Create(steamCmdZipPath))
+                    {
+                        contentStream.CopyTo(fileStream);
+                    }
+                }
+            }
+
+            Console.WriteLine("Extracting SteamCMD...");
+
+            ZipFile.ExtractToDirectory(steamCmdZipPath, AppDomain.CurrentDomain.BaseDirectory);
+
+            File.Delete(steamCmdZipPath);
+
+            Console.WriteLine("SteamCMD downloaded and extracted successfully.");
+            Console.WriteLine("Given this is the first run of steamCMD this will take slightly longer than normal");
+        }
+
         string appId = "281990"; // Replace with the desired AppID
 
         Console.ForegroundColor = ConsoleColor.Cyan;
@@ -34,7 +66,7 @@ class Program
 
 
         Console.ForegroundColor = ConsoleColor.White;
-        Console.Write("Enter the ModID or URL:\n\n ");
+        Console.Write("Enter the ModID or URL:\n");
         string modInput = Console.ReadLine();
 
         string modId;
@@ -59,7 +91,7 @@ class Program
         string modName = GetModName(modId);
         Console.WriteLine($"Downloading mod: {modName}");
 
-        string outputFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steam", "steamapps", "workshop", "content", appId, modId);
+        string outputFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamapps", "workshop", "content", appId, modId);
 
         // Start the SteamCMD process with arguments
         ProcessStartInfo startInfo = new ProcessStartInfo();
@@ -78,12 +110,8 @@ class Program
         steamCmdProcess.WaitForExit();
         steamCmdProcess.Close();
 
-        Console.WriteLine("SteamCMD operation completed.");
-        Console.WriteLine("Output:");
-        Console.WriteLine(output);
-
         // Create a zip file of the downloaded contents
-        string zipFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steam", "steamapps", "workshop", "content", appId, $"{modId}.zip");
+        string zipFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "steamapps", "workshop", "content", appId, $"{modId}.zip");
 
         // Check if the zip file already exists and delete it if it does
         if (File.Exists(zipFilePath))
@@ -150,8 +178,8 @@ class Program
 
         Console.WriteLine("Zip file moved to the mod folder.");
 
-        Console.WriteLine("Press the Spacebar to continue...");
-        while (Console.ReadKey(true).Key != ConsoleKey.Spacebar)
+        Console.WriteLine("Press the Enter to continue...");
+        while (Console.ReadKey(true).Key != ConsoleKey.Enter)
         {
             // Wait for the user to press the Spacebar
         }
@@ -164,15 +192,15 @@ class Program
 
         try
         {
-            using (WebClient client = new WebClient())
+            using (HttpClient client = new HttpClient())
             {
-                string html = client.DownloadString(url);
+                string html = client.GetStringAsync(url).Result;
 
                 // Check if the HTML contains the mod title
                 return html.Contains("<div class=\"workshopItemTitle\">");
             }
         }
-        catch (WebException ex)
+        catch (Exception ex)
         {
             // Handle any network or request errors
             Console.WriteLine("Error occurred while checking ModID validity: " + ex.Message);
@@ -180,16 +208,15 @@ class Program
         }
     }
 
-
     private static string GetModName(string modId)
     {
         string url = $"https://steamcommunity.com/sharedfiles/filedetails/?id={modId}";
 
         try
         {
-            using (WebClient client = new WebClient())
+            using (HttpClient client = new HttpClient())
             {
-                string html = client.DownloadString(url);
+                string html = client.GetStringAsync(url).Result;
 
                 // Find the mod title within the HTML
                 int startIndex = html.IndexOf("<div class=\"workshopItemTitle\">") + "<div class=\"workshopItemTitle\">".Length;
@@ -199,7 +226,7 @@ class Program
                 return modName;
             }
         }
-        catch (WebException ex)
+        catch (Exception ex)
         {
             // Handle any network or request errors
             Console.WriteLine("Error occurred while fetching the mod name: " + ex.Message);
